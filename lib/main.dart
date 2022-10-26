@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sqlite_sample/data/database/image_database.dart';
 import 'package:sqlite_sample/data/service/image_service.dart';
 import 'package:sqlite_sample/data/image_repository.dart';
@@ -46,6 +51,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController textEditingController = TextEditingController();
   CarouselController carouselController = CarouselController();
+  ValueNotifier<List<ImageUrl>> listImageUrl = ValueNotifier(<ImageUrl>[]);
 
   @override
   void initState() {
@@ -56,63 +62,88 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
+    print('Dong 59: ${mainController.listImageUrl.length}');
     return Scaffold(
         appBar: AppBar(
           title: const Text('Flutter Demo SQLite'),
+          backgroundColor: const Color(0xff4C4646),
         ),
         body: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const SizedBox(
-                height: 16,
+                height: 32,
               ),
-              CarouselSlider(
-                carouselController: carouselController,
-                options: CarouselOptions(
-                  height: size.height * 0.5,
-                  initialPage: 0,
-                  viewportFraction: 1,
-                  reverse: false,
-                  autoPlay: false,
-                ),
-                items: mainController.listImageUrl.map((i) {
-                  return Builder(
-                    builder: (BuildContext context) {
-                      if (i.imageUrl.isNotEmpty) {
-                        return CachedNetworkImage(
-                          imageUrl: i.imageUrl,
-                          imageBuilder: (context, imageProvider) => Container(
-                            margin: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(64)),
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          errorWidget: (BuildContext context, String url, _) =>
-                              Container(
-                            margin: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(16)),
-                          ),
-                          placeholder: (BuildContext context, String url) =>
-                              const Center(child: CupertinoActivityIndicator()),
-                        );
-                      }
-                      return Container(
-                        margin: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(16)),
+              Container(
+                margin: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                    color: const Color(0xffFFE4E1),
+                    borderRadius: BorderRadius.circular(8)),
+                child: ValueListenableBuilder<List<ImageUrl>>(
+                    valueListenable: listImageUrl,
+                    builder: (context, newValue, widget) {
+                      return CarouselSlider(
+                        carouselController: carouselController,
+                        options: CarouselOptions(
+                          height: size.height * 0.5,
+                          initialPage: 0,
+                          viewportFraction: 1,
+                          reverse: false,
+                          autoPlay: false,
+                        ),
+                        items: listImageUrl.value.map((i) {
+                          return Builder(
+                            builder: (BuildContext context) {
+                              if (i.imageUrl.isNotEmpty) {
+                                return CachedNetworkImage(
+                                  imageUrl: i.imageUrl,
+                                  imageBuilder: (context, imageProvider) =>
+                                      Container(
+                                    margin: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(64)),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget:
+                                      (BuildContext context, String url, _) =>
+                                          Container(
+                                    margin: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      image: const DecorationImage(
+                                        image: AssetImage(
+                                            'assets/image/ic_no_img.jpeg'),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  placeholder: (BuildContext context,
+                                          String url) =>
+                                      const Center(
+                                          child: CupertinoActivityIndicator()),
+                                );
+                              }
+                              return Container(
+                                margin: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                    image: const DecorationImage(
+                                      image: AssetImage(
+                                          'assets/image/ic_no_img.jpeg'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16)),
+                              );
+                            },
+                          );
+                        }).toList(),
                       );
-                    },
-                  );
-                }).toList(),
+                    }),
               ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -126,6 +157,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         );
                       },
                       style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
                           foregroundColor:
                               MaterialStateProperty.all<Color>(Colors.red),
                           shape: MaterialStateProperty.all<
@@ -145,6 +178,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         );
                       },
                       style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
                           foregroundColor:
                               MaterialStateProperty.all<Color>(Colors.red),
                           shape: MaterialStateProperty.all<
@@ -193,18 +228,16 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: TextButton(
-                    onPressed: () {
-                      setState(
-                        () {
-                          mainController.insertImageUrl(
-                              ImageUrl(imageUrl: textEditingController.text));
-                        },
-                      );
+                    onPressed: () async {
+                      listImageUrl.value = await mainController.insertImageUrl(
+                          ImageUrl(imageUrl: textEditingController.text));
                       textEditingController.clear();
                     },
                     style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white),
                         foregroundColor:
                             MaterialStateProperty.all<Color>(Colors.red),
                         shape:
@@ -213,7 +246,58 @@ class _MyHomePageState extends State<MyHomePage> {
                                     borderRadius: BorderRadius.circular(6.0),
                                     side:
                                         const BorderSide(color: Colors.red)))),
-                    child: const Text('Add link')),
+                    child: const Text('Add URL to Database')),
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: TextButton(
+                    onPressed: () async {
+                      XFile? pickedFile = await ImagePicker().pickImage(
+                        source: ImageSource.camera,
+                        maxWidth: 1800,
+                        maxHeight: 1800,
+                      );
+                      if (pickedFile != null && pickedFile.path != null) {
+                        GallerySaver.saveImage(pickedFile.path).then((value) {
+                          if (value == true) {
+                            Fluttertoast.showToast(
+                                msg: "Lưu ảnh thành công!",
+                                toastLength: Toast.LENGTH_LONG,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: const Color(0xffc4caf50),
+                                textColor: Colors.white,
+                                fontSize: 16.0);
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: "Lưu ảnh thất bại!",
+                                toastLength: Toast.LENGTH_LONG,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 16.0);
+                          }
+                        });
+                      }
+                      textEditingController.clear();
+                    },
+                    style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white),
+                        foregroundColor:
+                            MaterialStateProperty.all<Color>(Colors.red),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6.0),
+                                    side:
+                                        const BorderSide(color: Colors.red)))),
+                    child: const Text('Launch the Camera')),
+              ),
+              const SizedBox(
+                height: 16,
               ),
             ],
           ),
