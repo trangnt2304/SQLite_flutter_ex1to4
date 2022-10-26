@@ -111,18 +111,33 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ),
                                   ),
                                   errorWidget:
-                                      (BuildContext context, String url, _) =>
-                                          Container(
-                                    margin: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      image: const DecorationImage(
-                                        image: AssetImage(
-                                            'assets/image/ic_no_img.jpeg'),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
+                                      (BuildContext context, String url, _) {
+                                    if (File(i.imageUrl).existsSync() == true) {
+                                      return Container(
+                                        child: Image.file(
+                                          File(i.imageUrl),
+                                        ),
+                                        margin: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                      );
+                                    } else {
+                                      return Container(
+                                        margin: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          image: const DecorationImage(
+                                            image: AssetImage(
+                                                'assets/image/ic_no_img.jpeg'),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
                                   placeholder: (BuildContext context,
                                           String url) =>
                                       const Center(
@@ -259,6 +274,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         maxHeight: 1800,
                       );
                       if (pickedFile != null && pickedFile.path != null) {
+                        listImageUrl.value =
+                            await mainController.insertImageUrl(
+                                ImageUrl(imageUrl: pickedFile.path));
                         GallerySaver.saveImage(pickedFile.path).then((value) {
                           if (value == true) {
                             Fluttertoast.showToast(
