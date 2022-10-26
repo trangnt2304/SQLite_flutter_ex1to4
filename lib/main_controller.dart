@@ -10,25 +10,26 @@ class MainController {
 
   MainController(this._imageRepositoryImplement);
 
-  void insertImageUrl(ImageUrl student) async {
+  Future<List<ImageUrl>> insertImageUrl(ImageUrl student) async {
     DataResult dataResult =
         await _imageRepositoryImplement.insertImageUrl(student, "imageUrl");
     if (dataResult.isSuccess) {
       await getAllImageUrl();
       log("Success ${listImageUrl.length}");
+      return listImageUrl;
     } else {
       if (dataResult.error is DatabaseFailure) {
         log("Error ${(dataResult.error as DatabaseFailure).errorMessage}");
+        return <ImageUrl>[];
       }
     }
+    return <ImageUrl>[];
   }
 
   Future<void> getAllImageUrl() async {
     DataResult dataResult = await _imageRepositoryImplement.getAllImageUrl();
     if (dataResult.isSuccess) {
       listImageUrl = dataResult.data;
-      print('Dong 54 ${dataResult.data.length}');
-
     } else {
       if (dataResult.error is DatabaseFailure) {
         log("Error ${(dataResult.error as DatabaseFailure).errorMessage}");
