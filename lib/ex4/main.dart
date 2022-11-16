@@ -7,15 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sqlite_sample/controller/main_controller.dart';
 import 'package:sqlite_sample/data/database/image_database.dart';
-import 'package:sqlite_sample/data/service/image_service.dart';
 import 'package:sqlite_sample/data/image_repository.dart';
-import 'package:sqlite_sample/main_controller.dart';
-
-import 'data/model/image_model.dart';
+import 'package:sqlite_sample/data/model/image_model.dart';
+import 'package:sqlite_sample/data/service/image_service.dart';
 
 void main() async {
-  /// Avoid errors caused by flutter upgrade
   WidgetsFlutterBinding.ensureInitialized();
   ImageDatabase.getInstance();
   runApp(const MyApp());
@@ -56,7 +54,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    mainController.getAllImageUrl();
+    onInit();
+  }
+
+  Future<void> onInit() async {
+    await mainController.getAllImageUrl();
+    listImageUrl.value = mainController.listImageUrl;
   }
 
   @override

@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:sqlite_sample/data/base/data_result.dart';
-import 'package:sqlite_sample/data/model/image_model.dart';
 import 'package:sqlite_sample/data/image_repository.dart';
+import 'package:sqlite_sample/data/model/image_model.dart';
 
 class MainController {
   final ImageRepositoryImplement _imageRepositoryImplement;
